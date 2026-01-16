@@ -7,10 +7,9 @@ Draws directly onto the desktop using system APIs, providing a dynamic and custo
 ---
 
 ## Demo
-Watch it in action:
+Watch demo:
 
-![RT-Wallpaper Demo](assets/demo.gif)  
-*Or link to a short video if GIF is too large:*
+![RT-Wallpaper Demo](assets/demo.gif) 
 
 <video width="640" height="360" controls>
   <source src="assets/demo.mp4" type="video/mp4">
