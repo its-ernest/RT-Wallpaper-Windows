@@ -11,18 +11,13 @@ Watch demo:
 
 ![RT-Wallpaper Demo](assets/demo.gif) 
 
-<video width="640" height="360" controls>
-  <source src="assets/demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
 ---
 
 ## Features
 - Real-time wallpapers on Windows
 - Draws dynamic content directly onto the desktop
 - Lightweight web interface via Flask + PyWebview
-- Image manipulation and processing using Pillow
+- Image manipulation and processing using Py Win32 API and Pillow module
 - Fully customizable animations and images
 
 ---
@@ -30,15 +25,18 @@ Watch demo:
 ## Tech Stack
 - Python 3.12.8
 - [PyWebview](https://github.com/r0x0r/pywebview) – GUI layer for lightweight web UI  
-- [PyWin32](https://github.com/mhammond/pywin32) – Desktop integration for drawing  
+- [PyWin32](https://github.com/mhammond/pywin32) – Win32 API - Desktop integration for drawing  
 - [Flask](https://flask.palletsprojects.com/) – Web server to handle UI and controls  
 - [Pillow](https://python-pillow.org/) – Image processing library  
 
 ---
 
 ## Installation (Prebuilt Software)
-1. Download the latest release from the [Releases page](https://github.com/its-ernest/rt-wallpaper-windows/releases)  
-2. Run the executable and follow on-screen instructions  
+1. [Download the latest](https://github.com/its-ernest/RT-Wallpaper-Windows/releases/download/v1.0/app.zip) or select version from [Releases page](https://github.com/its-ernest/rt-wallpaper-windows/releases)
+2. Extract app.zip into an empty folder.
+3. Open the folder and run 'start-live.exe' to setup live wallpaper
+4. Choose a video and hit Set as wallpaper
+5. Click on run.
 
 ---
 
