@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Live Wallpaper</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            background: black;
+            font-family: "Segoe UI", sans-serif;
+            user-select: none;
+        }
+
+        video {
+            position: absolute;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 0;
+        }
+
+        #icons-container {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .icon {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .icon img {
+            width: 48px;
+            height: 48px;
+            display: block;
+            margin: auto;
+        }
+
+        .icon span {
+            display: block;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .icon:hover {
+            transform: scale(1.1);
+            transition: transform 0.2s;
+        }
+
+        .icon:hover span {
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .icon:hover img {
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+        }
+
+        .icon:hover {
+            z-index: 2;
+        }
+
+        /* -------------------------
+           Context Menu
+        -------------------------- */
+        #context-menu {
+            position: fixed;
+            min-width: 200px;
+            background: rgba(30, 30, 30, 0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            display: none;
+            border-radius: 6px;
+        }
+
+        .menu-item {
+            padding: 8px 14px;
+            font-size: 13px;
+            color: #eee;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .menu-separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 4px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <video id="wallpaperVideo" autoplay loop muted></video>
+
+    <div id="icons-container"></div>
+
+    <div id="context-menu">
+        <div class="menu-item" id="menu-open">Open</div>
+        <div class="menu-item" id="menu-open-location">Open file location</div>
+        <div class="menu-separator"></div>
+        <div class="menu-item" id="menu-copy-path">Copy path</div>
+        <div class="menu-separator"></div>
+        <div class="menu-item" id="open-properties">Properties</div>
+    </div>
+
+    <script>
+        let currentContextIcon = null;
+
+        async function waitForAPI() {
+            while (!window.pywebview || !window.pywebview.api) {
+                await new Promise(r => setTimeout(r, 300));
+            }
+        }
+
+        function showContextMenu(x, y, icon) {
+            currentContextIcon = icon;
+            const menu = document.getElementById("context-menu");
+            menu.style.left = x + "px";
+            menu.style.top = y + "px";
+            menu.style.display = "block";
+        }
+
+        function hideContextMenu() {
+            document.getElementById("context-menu").style.display = "none";
+            currentContextIcon = null;
+        }
+        async function loadWallpaper() {
+            const videoPath = await window.pywebview.api.get_wallpaper_video();
+            const video = document.getElementById("wallpaperVideo");
+
+            video.src = videoPath;
+            video.load();
+        }
+
+        async function loadIcons() {
+            const icons = await window.pywebview.api.get_icons();
+            const container = document.getElementById('icons-container');
+
+            const spacingX = 100;
+            const spacingY = 100;
+            const margin = 20;
+
+            let x = margin;
+            let y = margin;
+            const maxHeight = window.innerHeight - margin;
+
+            icons.forEach(icon => {
+                const div = document.createElement('div');
+                div.className = 'icon';
+                div.style.left = x + 'px';
+                div.style.top = y + 'px';
+                div.innerHTML = `<img src="${icon.icon}"><span>${icon.name}</span>`;
+                div.title = icon.path;
+
+                div.onclick = () => {
+                    hideContextMenu();
+                    window.pywebview.api.launch_icon(icon.path);
+                };
+
+                div.oncontextmenu = (e) => {
+                    e.preventDefault();
+                    showContextMenu(e.clientX, e.clientY, icon);
+                };
+
+                container.appendChild(div);
+
+                y += spacingY;
+                if (y + spacingY > maxHeight) {
+                    y = margin;
+                    x += spacingX;
+                }
+            });
+        }
+
+        document.getElementById("menu-open").onclick = () => {
+            if (currentContextIcon)
+                window.pywebview.api.launch_icon(currentContextIcon.path);
+            hideContextMenu();
+        };
+
+        document.getElementById("menu-open-location").onclick = () => {
+            if (currentContextIcon)
+                window.pywebview.api.open_file_location(currentContextIcon.path);
+            hideContextMenu();
+        };
+        document.getElementById("open-properties").onclick = () => {
+            if (currentContextIcon)
+                window.pywebview.api.open_properties(currentContextIcon.path);
+            hideContextMenu();
+        };
+        document.getElementById("menu-copy-path").onclick = async () => {
+            if (currentContextIcon)
+                await navigator.clipboard.writeText(currentContextIcon.path);
+            hideContextMenu();
+        };
+
+        document.addEventListener("click", hideContextMenu);
+        document.addEventListener("keydown", e => e.key === "Escape" && hideContextMenu());
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await waitForAPI();
+            await loadWallpaper();
+            await loadIcons();
+        });
+    </script>
+</body>
+
+</html>

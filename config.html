@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Live Wallpaper Setup</title>
+
+    <style>
+        :root {
+            --bg: #1e1e1e;
+            --panel: #252526;
+            --border: #3a3a3a;
+            --text: #eaeaea;
+            --muted: #b0b0b0;
+            --accent: #4cc2ff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            font-family: "Segoe UI", system-ui, sans-serif;
+            color: var(--text);
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .window {
+            width: 480px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .header {
+            padding: 18px 20px 10px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .sub {
+            padding: 0 20px 18px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .section {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: #1b1b1b;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 10px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            background: #2d2d2d;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #3a3a3a;
+        }
+
+        button.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+            font-weight: 600;
+        }
+
+        button.primary:hover {
+            filter: brightness(1.05);
+        }
+
+        .footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="window">
+        <div class="header">Live Wallpaper</div>
+        <div class="sub">
+            Choose the video file you want to use as your desktop wallpaper.
+            You can change this later from settings.
+        </div>
+
+        <div class="section">
+            <div class="row">
+                <input id="videoPath" type="text" placeholder="No video selected…" readonly />
+                <button onclick="browse()">Browse</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button onclick="cancel()">Cancel</button>
+            <button class="primary" onclick="continueSetup()">Set live wallpaper</button>
+            <button class="primary" onclick="launchLive()">Launch live wallpaper</button>
+        </div>
+    </div>
+
+    <script>
+        async function browse() {
+            const path = await window.pywebview.api.browse_video();
+            if (path) {
+                document.getElementById("videoPath").value = path;
+            }
+        }
+
+        async function continueSetup() {
+            const path = document.getElementById("videoPath").value;
+            if (!path) {
+                alert("Please select a video file.");
+                return;
+            }
+
+            await window.pywebview.api.save_config(path);
+            alert("Wallpaper applied! Startng live wallpaper...");
+            await window.pywebview.api.start_live();
+            await window.pywebview.api.close();
+        }
+
+        async function cancel() {
+            await window.pywebview.api.close();
+        }
+
+        async function launchLive() {
+            response = await window.pywebview.api.start_live();
+            if (!response) {
+                alert("No video wallpaper is set. Please set a video wallpaper first.");
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", async () => {
+            const cfg = await window.pywebview.api.load_config();
+            if (cfg.video) {
+                document.getElementById("videoPath").value = cfg.video;
+            }
+        });
+    </script>
+
+</body>
+
+</html>
